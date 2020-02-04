@@ -1,31 +1,33 @@
-node
+node 
 {
-    def mavenHome = tool name: "maven.3.6.2"
-    
-    stage("Git")
-    {
-        git credentialsId: '38f36948-2585-47a1-a63e-a638a92d85a1', url: 'https://github.com/SrujanReddyMR/maven-web-application.git'
-    }
-    
-    stage("Maven")
-    {
-        sh "${mavenHome}/bin/mvn package"
-    }
-     stage("Sonar")
-    {
-        sh "${mavenHome}/bin/mvn sonar:sonar"
-    }
-     stage("Nexus")
-    {
-        sh "${mavenHome}/bin/mvn deploy"
-    }
-    stage("Tomcat")
-    {
-        sshagent(['9aa04958-fe0d-4ba1-92a0-6ca7376e2475']) 
-        {
-            
-          sh "scp -o StricthostKeyChecking=no target/maven-web-application.war ec2-user@13.233.183.154:/opt/apache-tomcat-9.0.29/webapps/"
-        }
-    }
-    
+ def mavenHome = tool name: "maven 3.6.2", type:"maven"
+     stage("Gitclone")
+     {
+         git 'https://github.com/SrujanReddyMR/maven-web-application.git'
+     }
+ stage("Build artifacts")
+ {
+     sh "${mavenHome}/bin/mvn clean package"
+ }
+ stage("sonar")
+ {
+     sh "${mavenHome}/bin/mvn clean sonar:sonar"
+ }
+ stage("Deploy into nexus")
+ {
+     sh "${mavenHome}/bin/mvn clean deploy"
+ }
+ stage("deploy into tomcat")
+ {
+     sshagent(['6affd506-473e-4073-b1ab-c99131bcee6f'])
+     {
+         sh "scp -o strictHostKeyChecking=no target/maven-web-application.war ec2-user@13.233.127.153:/opt/apache-tomcat-9.0.29/webapps/"
+     }
+ }
+ stage("email notification")
+ {
+     emailext body: 'jai balayya', 
+     subject: 'Build is Good', 
+     to: 'govardhan34444@gmail.com'
+ }
 }
